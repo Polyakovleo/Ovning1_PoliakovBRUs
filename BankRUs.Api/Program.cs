@@ -1,6 +1,8 @@
 ﻿
 using BankRUs.Application.Interfaces;
-//using BankRUs.Infrastructure.Persistence;
+using BankRUs.Application.UseCases.Accounts;
+using BankRUs.Application.UseCases.Customers;
+using BankRUs.Infrastructure.Persistence;
 using BankRUs.Infrastructure.Repositories;
 using BankRUs.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
@@ -17,6 +19,10 @@ builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
 
 builder.Services.AddScoped<IAccountNumberGenerator, AccountNumberGenerator>();
+
+builder.Services.AddScoped<CreateCustomerWithAccount>();
+builder.Services.AddScoped<CreateAccountForExistingCustomer>();
+
 
 // Unit of Work = тот же DbContext
 builder.Services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<BankDbContext>());

@@ -1,6 +1,7 @@
 ﻿using BankRUs.Application.Interfaces;
 using BankRUs.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using BankRUs.Infrastructure.Persistence;
 
 namespace BankRUs.Infrastructure.Repositories
 {

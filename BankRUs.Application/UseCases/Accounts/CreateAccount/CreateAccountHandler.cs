@@ -9,17 +9,20 @@ namespace BankRUs.Application.UseCases.Accounts.CreateAccount
         private readonly IAccountRepository _accounts;
         private readonly IAccountNumberGenerator _accountNumberGenerator;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IEmailSender _emailSender;
 
         public CreateAccountHandler(
             ICustomerRepository customers,
             IAccountRepository accounts,
             IAccountNumberGenerator accountNumberGenerator,
-            IUnitOfWork unitOfWork)
+            IUnitOfWork unitOfWork,
+            IEmailSender emailSender)
         {
             _customers = customers;
             _accounts = accounts;
             _accountNumberGenerator = accountNumberGenerator;
             _unitOfWork = unitOfWork;
+            _emailSender = emailSender;
         }
 
         public async Task<CreateAccountResult> HandleAsync(
@@ -56,6 +59,16 @@ namespace BankRUs.Application.UseCases.Accounts.CreateAccount
             // 5) Persist + commit
             await _accounts.AddAsync(account, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            // 5.5) Send welcome email (after successful commit)
+            var subject = "Välkommen till BankRUs!";
+            var body = $@"
+            <h2>Hej!</h2>
+            <p>Ditt bankkonto är skapat.</p>
+            <p><b>Kontonummer:</b> {account.AccountNumber}</p>
+            <p>Tack för att du valde BankRUs.</p>";
+
+            await _emailSender.SendAsync(customer.Email, subject, body, cancellationToken);
 
             // 6) Result
             return CreateAccountResult.Ok(

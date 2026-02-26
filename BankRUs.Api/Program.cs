@@ -1,6 +1,7 @@
 ﻿
 using BankRUs.Application.Common.Exceptions;
 using BankRUs.Application.Interfaces;
+using BankRUs.Infrastructure.Email;
 using BankRUs.Application.UseCases.Accounts;
 using BankRUs.Application.UseCases.Customers;
 using BankRUs.Infrastructure.Persistence;
@@ -27,6 +28,10 @@ builder.Services.AddScoped<CreateCustomerWithAccount>();
 builder.Services.AddScoped<CreateAccountForExistingCustomer>();
 
 builder.Services.AddScoped<GetAllCustomers>();
+
+// Email sender
+builder.Services.Configure<EmailOptions>(builder.Configuration.GetSection("Email"));
+builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
 
 // Unit of Work = тот же DbContext
 builder.Services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<BankDbContext>());

@@ -36,5 +36,14 @@ namespace BankRUs.Infrastructure.Repositories
         {
             await _context.Customers.AddAsync(customer, cancellationToken);
         }
+
+        public async Task<IReadOnlyList<Customer>> GetAllAsync(CancellationToken ct)
+        {
+            return await _context.Customers
+                .AsNoTracking()
+                .OrderBy(c => c.Name)
+                .Include(c => c.Accounts)
+                .ToListAsync(ct);
+        }
     }
 }

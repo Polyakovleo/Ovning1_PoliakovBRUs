@@ -14,7 +14,9 @@ namespace BankRUs.Application.Interfaces
 
             Task AddAsync(Customer customer, CancellationToken cancellationToken);
 
+            Task<IReadOnlyList<Customer>> GetAllAsync(CancellationToken cancellationToken);
+
             //Task SaveChangesAsync(CancellationToken cancellationToken);
-        }
+    }
     
 }

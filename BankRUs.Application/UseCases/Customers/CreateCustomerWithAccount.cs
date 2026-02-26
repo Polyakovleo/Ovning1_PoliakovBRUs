@@ -1,4 +1,5 @@
-﻿using BankRUs.Application.Interfaces;
+﻿using BankRUs.Application.Common.Exceptions;
+using BankRUs.Application.Interfaces;
 using BankRUs.Domain.Entities;
 
 namespace BankRUs.Application.UseCases.Customers;
@@ -45,11 +46,11 @@ public class CreateCustomerWithAccount
         // Уникальность (минимально)
         var existingByPn = await _customers.GetByPersonalNumberAsync(req.PersonalNumber, ct);
         if (existingByPn is not null)
-            throw new InvalidOperationException("Customer with this personal number already exists.");
+            throw new DomainValidationException("Customer with this personal number already exists.");
 
         var existingByEmail = await _customers.GetByEmailAsync(req.Email, ct);
         if (existingByEmail is not null)
-            throw new InvalidOperationException("Customer with this email already exists.");
+            throw new DomainValidationException("Customer with this email already exists.");
 
         // Создаем Customer
         var customer = new Customer(req.Name, req.Email, req.PersonalNumber);
@@ -60,7 +61,7 @@ public class CreateCustomerWithAccount
 
         // (опционально) если генератор не гарантирует уникальность:
         if (await _accounts.AccountNumberExistsAsync(accountNumber, ct))
-            throw new InvalidOperationException("Generated account number already exists. Try again.");
+            throw new DomainValidationException("Generated account number already exists. Try again.");
 
         var account = new BankAccount(customer.Id, accountNumber, req.InitialBalance);
         await _accounts.AddAsync(account, ct);

@@ -28,7 +28,17 @@ public class CustomersController : ControllerBase
         var result = await useCase.ExecuteAsync(
             new CreateAccountForExistingCustomerRequest(customerId, body.InitialBalance),
             ct);
+    
 
+        return Ok(result);
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<IReadOnlyList<CustomerListItemDto>>> GetAll(
+    [FromServices] GetAllCustomers useCase,
+    CancellationToken ct)
+    {
+        var result = await useCase.ExecuteAsync(ct);
         return Ok(result);
     }
 

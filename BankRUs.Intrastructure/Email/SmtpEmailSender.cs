@@ -28,7 +28,7 @@ public sealed class SmtpEmailSender : IEmailSender
         using var client = new SmtpClient(_opt.Host, _opt.Port)
         {
             DeliveryMethod = SmtpDeliveryMethod.Network,
-            UseDefaultCredentials = true
+            UseDefaultCredentials = false
         };
 
         await client.SendMailAsync(message);

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
+﻿
 namespace BankRUs.Application.UseCases.Accounts.CreateAccount
 {
     public class CreateAccountCommand

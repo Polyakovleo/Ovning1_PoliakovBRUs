@@ -1,6 +1,7 @@
-﻿using BankRUs.Application.Common.Exceptions;
+using BankRUs.Application.Common.Exceptions;
 using BankRUs.Application.Interfaces;
 using BankRUs.Domain.Entities;
+using Microsoft.Extensions.Logging;
 
 namespace BankRUs.Application.UseCases.Customers;
 
@@ -23,17 +24,23 @@ public class CreateCustomerWithAccount
     private readonly IAccountRepository _accounts;
     private readonly IAccountNumberGenerator _accountNumberGenerator;
     private readonly IUnitOfWork _uow;
+    private readonly IEmailSender _emailSender;
+    private readonly ILogger<CreateCustomerWithAccount> _logger;
 
     public CreateCustomerWithAccount(
         ICustomerRepository customers,
         IAccountRepository accounts,
         IAccountNumberGenerator accountNumberGenerator,
-        IUnitOfWork uow)
+        IUnitOfWork uow,
+        IEmailSender emailSender,
+        ILogger<CreateCustomerWithAccount> logger)
     {
         _customers = customers;
         _accounts = accounts;
         _accountNumberGenerator = accountNumberGenerator;
         _uow = uow;
+        _emailSender = emailSender;
+        _logger = logger;
     }
 
     public async Task<CreateCustomerWithAccountResponse> ExecuteAsync(
@@ -68,6 +75,25 @@ public class CreateCustomerWithAccount
 
         // Один коммит на всё
         await _uow.SaveChangesAsync(ct);
+
+        // Пытаемся отправить приветственное письмо, но не ломаем основной флоу
+        try
+        {
+            var subject = "Välkommen till BankRUs!";
+            var body = $@"
+<h2>Hej {customer.Name}!</h2>
+<p>Ditt bankkonto är skapat.</p>
+<p><b>Kontonummer:</b> {account.AccountNumber}</p>
+<p>Saldo: {account.Balance} SEK</p>";
+
+            await _emailSender.SendAsync(customer.Email, subject, body, ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Failed to send welcome email for newly created customer {CustomerId}",
+                customer.Id);
+        }
 
         return new CreateCustomerWithAccountResponse(customer.Id, account.Id, account.AccountNumber);
     }

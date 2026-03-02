@@ -1,5 +1,6 @@
 ﻿using BankRUs.Application.Interfaces;
 using BankRUs.Domain.Entities;
+using Microsoft.Extensions.Logging;
 
 namespace BankRUs.Application.UseCases.Accounts.CreateAccount
 {
@@ -10,19 +11,22 @@ namespace BankRUs.Application.UseCases.Accounts.CreateAccount
         private readonly IAccountNumberGenerator _accountNumberGenerator;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IEmailSender _emailSender;
+        private readonly ILogger<CreateAccountHandler> _logger;
 
         public CreateAccountHandler(
             ICustomerRepository customers,
             IAccountRepository accounts,
             IAccountNumberGenerator accountNumberGenerator,
             IUnitOfWork unitOfWork,
-            IEmailSender emailSender)
+            IEmailSender emailSender,
+            ILogger<CreateAccountHandler> logger)
         {
             _customers = customers;
             _accounts = accounts;
             _accountNumberGenerator = accountNumberGenerator;
             _unitOfWork = unitOfWork;
             _emailSender = emailSender;
+            _logger = logger;
         }
 
         public async Task<CreateAccountResult> HandleAsync(
@@ -60,15 +64,26 @@ namespace BankRUs.Application.UseCases.Accounts.CreateAccount
             await _accounts.AddAsync(account, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            // 5.5) Send welcome email (after successful commit)
-            var subject = "Välkommen till BankRUs!";
-            var body = $@"
-            <h2>Hej!</h2>
-            <p>Ditt bankkonto är skapat.</p>
-            <p><b>Kontonummer:</b> {account.AccountNumber}</p>
-            <p>Tack för att du valde BankRUs.</p>";
+            try
+            {
+                var subject = "Välkommen till BankRUs!";
+                var body = $@"
+        <h2>Hej {customer.Name}!</h2>
+        <p>Ditt bankkonto är skapat.</p>
+        <p><b>Kontonummer:</b> {account.AccountNumber}</p>
+        <p>Saldo: {account.Balance} SEK</p>";
 
-            await _emailSender.SendAsync(customer.Email, subject, body, cancellationToken);
+                await _emailSender.SendAsync(customer.Email, subject, body, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Failed to send welcome email for customer {CustomerId}",
+                    customer.Id);
+                throw; // временно, чтобы увидеть ошибку в ответе/консоли
+
+                // НЕ return Fail
+            }
 
             // 6) Result
             return CreateAccountResult.Ok(

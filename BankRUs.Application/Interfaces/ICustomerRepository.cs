@@ -1,4 +1,4 @@
-﻿
+
 using BankRUs.Domain.Entities;
 
 namespace BankRUs.Application.Interfaces
@@ -15,6 +15,11 @@ namespace BankRUs.Application.Interfaces
             Task AddAsync(Customer customer, CancellationToken cancellationToken);
 
             Task<IReadOnlyList<Customer>> GetAllAsync(CancellationToken cancellationToken);
+
+            Task<(IReadOnlyList<Customer> Items, int TotalCount)> GetPageAsync(
+                int page,
+                int pageSize,
+                CancellationToken cancellationToken);
 
             //Task SaveChangesAsync(CancellationToken cancellationToken);
     }

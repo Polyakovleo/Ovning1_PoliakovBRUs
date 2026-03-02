@@ -1,4 +1,4 @@
-﻿using BankRUs.Application.Interfaces;
+using BankRUs.Application.Interfaces;
 using BankRUs.Domain.Entities;
 using BankRUs.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -44,6 +44,27 @@ namespace BankRUs.Infrastructure.Repositories
                 .OrderBy(c => c.Name)
                 .Include(c => c.Accounts)
                 .ToListAsync(ct);
+        }
+
+        public async Task<(IReadOnlyList<Customer> Items, int TotalCount)> GetPageAsync(
+            int page,
+            int pageSize,
+            CancellationToken ct)
+        {
+            if (page < 1) page = 1;
+            if (pageSize < 1) pageSize = 1;
+
+            var totalCount = await _context.Customers.CountAsync(ct);
+
+            var items = await _context.Customers
+                .AsNoTracking()
+                .OrderBy(c => c.Name)
+                .Include(c => c.Accounts)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync(ct);
+
+            return (items, totalCount);
         }
     }
 }

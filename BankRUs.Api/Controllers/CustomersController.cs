@@ -1,11 +1,15 @@
-﻿using BankRUs.Application.UseCases.Accounts;
+using BankRUs.Application.UseCases.Accounts;
 using BankRUs.Application.UseCases.Customers;
 using Microsoft.AspNetCore.Mvc;
+using BankRUs.Application.Common.Paging;
+using BankRUs.Api;
+using Microsoft.Extensions.Options;
+using Microsoft.AspNetCore.Authorization;
 
 namespace BankRUs.Api.Controllers;
 
 [ApiController]
-[Route("customers")]
+[Route("api/customers")]
 public class CustomersController : ControllerBase
 {
     [HttpPost]
@@ -34,11 +38,24 @@ public class CustomersController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyList<CustomerListItemDto>>> GetAll(
-    [FromServices] GetAllCustomers useCase,
-    CancellationToken ct)
+    [Authorize(Roles = "CustomerService")]
+    public async Task<ActionResult<PagedResult<CustomerListItemDto>>> GetPage(
+        [FromServices] GetCustomersPage useCase,
+        [FromServices] IOptions<QueryParamsOptions> options,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        CancellationToken ct = default)
     {
-        var result = await useCase.ExecuteAsync(ct);
+        var maxPageSize = options.Value.MaxPageSize;
+
+        if (page < 1) page = 1;
+        if (pageSize < 1) pageSize = 1;
+        if (pageSize > maxPageSize) pageSize = maxPageSize;
+
+        var result = await useCase.ExecuteAsync(
+            new GetCustomersPageQuery(page, pageSize),
+            ct);
+
         return Ok(result);
     }
 

@@ -9,7 +9,10 @@ using BankRUs.Infrastructure.Repositories;
 using BankRUs.Infrastructure.Services;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
+using BankRUs.Api;
+using BankRUs.Api.Auth;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,6 +31,7 @@ builder.Services.AddScoped<CreateCustomerWithAccount>();
 builder.Services.AddScoped<CreateAccountForExistingCustomer>();
 
 builder.Services.AddScoped<GetAllCustomers>();
+builder.Services.AddScoped<GetCustomersPage>();
 builder.Services.AddScoped<OpenBankAccount>();
 
 // Email sender
@@ -40,6 +44,16 @@ builder.Services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<BankDbContex
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+
+// Query params options (pagination limits etc.)
+builder.Services.Configure<QueryParamsOptions>(builder.Configuration.GetSection("QueryParams"));
+
+// AuthN/AuthZ (simple header-based auth for homework)
+builder.Services.AddAuthentication(HeaderAuthenticationHandler.SchemeName)
+    .AddScheme<AuthenticationSchemeOptions, HeaderAuthenticationHandler>(
+        HeaderAuthenticationHandler.SchemeName,
+        _ => { });
+builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
@@ -55,12 +69,40 @@ app.UseExceptionHandler(errorApp =>
     {
         var ex = context.Features.Get<IExceptionHandlerFeature>()?.Error;
 
-        var (status, title, type) = ex switch
+        var (status, title, type, detail) = ex switch
         {
-            DomainValidationException => (StatusCodes.Status400BadRequest, "Validation error", "https://httpstatuses.com/400"),
-            ArgumentException or ArgumentOutOfRangeException => (StatusCodes.Status400BadRequest, "Validation error", "https://httpstatuses.com/400"),
-            NotFoundException => (StatusCodes.Status404NotFound, "Not found", "https://httpstatuses.com/404"),
-            _ => (StatusCodes.Status500InternalServerError, "Server error", "https://httpstatuses.com/500")
+            DomainValidationException dve => (
+                StatusCodes.Status400BadRequest,
+                "Validation error",
+                "https://httpstatuses.com/400",
+                dve.Message),
+
+            ArgumentException or ArgumentOutOfRangeException => (
+                StatusCodes.Status400BadRequest,
+                "Validation error",
+                "https://httpstatuses.com/400",
+                ex?.Message ?? "Validation error"),
+
+            DbUpdateException dbEx
+                when dbEx.InnerException?.Message.Contains("IX_Customers_Email") == true
+                  || dbEx.InnerException?.Message.Contains("IX_Customers_PersonalNumber") == true
+                => (
+                    StatusCodes.Status400BadRequest,
+                    "Duplicate customer",
+                    "https://httpstatuses.com/400",
+                    "Customer with this email or personal number already exists."),
+
+            NotFoundException => (
+                StatusCodes.Status404NotFound,
+                "Not found",
+                "https://httpstatuses.com/404",
+                ex?.Message ?? "Resource not found"),
+
+            _ => (
+                StatusCodes.Status500InternalServerError,
+                "Server error",
+                "https://httpstatuses.com/500",
+                ex?.Message ?? "Unexpected server error")
         };
 
         context.Response.StatusCode = status;
@@ -71,7 +113,7 @@ app.UseExceptionHandler(errorApp =>
             Status = status,
             Title = title,
             Type = type,
-            Detail = ex?.Message,
+            Detail = detail,
             Instance = context.Request.Path
         };
 
@@ -84,6 +126,7 @@ app.UseExceptionHandler(errorApp =>
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

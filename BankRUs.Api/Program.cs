@@ -1,4 +1,4 @@
-﻿
+
 using BankRUs.Application.Common.Exceptions;
 using BankRUs.Application.Interfaces;
 using BankRUs.Infrastructure.Email;
@@ -28,6 +28,7 @@ builder.Services.AddScoped<CreateCustomerWithAccount>();
 builder.Services.AddScoped<CreateAccountForExistingCustomer>();
 
 builder.Services.AddScoped<GetAllCustomers>();
+builder.Services.AddScoped<OpenBankAccount>();
 
 // Email sender
 builder.Services.Configure<EmailOptions>(builder.Configuration.GetSection("Email"));

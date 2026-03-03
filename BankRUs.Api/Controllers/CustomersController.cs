@@ -59,5 +59,16 @@ public class CustomersController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("{id:guid}")]
+    [Authorize(Roles = "CustomerService")]
+    public async Task<ActionResult<CustomerDetailDto>> GetById(
+        Guid id,
+        [FromServices] GetCustomerById useCase,
+        CancellationToken ct = default)
+    {
+        var result = await useCase.ExecuteAsync(id, ct);
+        return Ok(result);
+    }
+
     public record CreateAccountBody(decimal InitialBalance = 0m);
 }

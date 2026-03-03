@@ -20,6 +20,14 @@ namespace BankRUs.Infrastructure.Repositories
                 .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
         }
 
+        public async Task<Customer?> GetByIdWithAccountsAsync(Guid id, CancellationToken cancellationToken)
+        {
+            return await _context.Customers
+                .AsNoTracking()
+                .Include(c => c.Accounts)
+                .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
+        }
+
         public async Task<Customer?> GetByPersonalNumberAsync(string personalNumber, CancellationToken cancellationToken)
         {
             return await _context.Customers

@@ -5,6 +5,7 @@ using BankRUs.Application.Common.Paging;
 using BankRUs.Api;
 using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace BankRUs.Api.Controllers;
 
@@ -71,5 +72,32 @@ public class CustomersController : ControllerBase
         return Ok(result);
     }
 
+    [HttpPatch]
+    [Authorize(Roles = "Customer")]
+    public async Task<IActionResult> UpdateMe(
+        [FromServices] UpdateCustomerDetails useCase,
+        [FromBody] UpdateCustomerDetailsBody body,
+        CancellationToken ct = default)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!Guid.TryParse(userId, out var customerId))
+            return Forbid();
+
+        var command = new UpdateCustomerDetailsCommand(
+            customerId,
+            body.FirstName,
+            body.Email,
+            body.PersonalNumber);
+
+        await useCase.HandleAsync(command, ct);
+
+        return NoContent();
+    }
+
     public record CreateAccountBody(decimal InitialBalance = 0m);
+
+    public record UpdateCustomerDetailsBody(
+        string? FirstName,
+        string? Email,
+        string? PersonalNumber);
 }

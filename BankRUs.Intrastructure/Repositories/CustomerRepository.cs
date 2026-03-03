@@ -83,5 +83,11 @@ namespace BankRUs.Infrastructure.Repositories
 
             return (items, totalCount);
         }
+
+        public Task DeleteAsync(Customer customer, CancellationToken ct)
+        {
+            _context.Customers.Remove(customer);
+            return Task.CompletedTask;
+        }
     }
 }

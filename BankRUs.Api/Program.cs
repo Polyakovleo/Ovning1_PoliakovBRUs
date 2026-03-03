@@ -33,6 +33,8 @@ builder.Services.AddScoped<CreateAccountForExistingCustomer>();
 builder.Services.AddScoped<GetAllCustomers>();
 builder.Services.AddScoped<GetCustomersPage>();
 builder.Services.AddScoped<GetCustomerById>();
+builder.Services.AddScoped<UpdateCustomerDetails>();
+builder.Services.AddScoped<CloseCustomerAccount>();
 builder.Services.AddScoped<OpenBankAccount>();
 
 // Email sender

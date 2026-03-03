@@ -1,4 +1,4 @@
-﻿
+
 namespace BankRUs.Domain.Entities
 {
     public class Customer
@@ -28,6 +28,9 @@ namespace BankRUs.Domain.Entities
         public void ChangeEmail(string email) => Email = ValidateEmail(email);
 
         public void ChangeName(string name) => Name = NormalizeRequired(name, nameof(name));
+
+        public void ChangePersonalNumber(string personalNumber) =>
+            PersonalNumber = ValidatePersonalNumber(personalNumber);
 
         private static string NormalizeRequired(string value, string paramName)
         {

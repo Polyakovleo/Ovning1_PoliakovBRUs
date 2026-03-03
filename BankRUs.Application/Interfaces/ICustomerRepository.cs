@@ -24,6 +24,8 @@ namespace BankRUs.Application.Interfaces
                 string? ssnFilter,
                 CancellationToken cancellationToken);
 
+            Task DeleteAsync(Customer customer, CancellationToken cancellationToken);
+
             //Task SaveChangesAsync(CancellationToken cancellationToken);
     }
     

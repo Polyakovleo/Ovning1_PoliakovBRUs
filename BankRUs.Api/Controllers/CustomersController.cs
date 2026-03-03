@@ -14,6 +14,12 @@ namespace BankRUs.Api.Controllers;
 public class CustomersController : ControllerBase
 {
     [HttpPost]
+    [EndpointSummary("Create customer with first bank account")]
+    [EndpointDescription("Creates a new customer together with an initial bank account. Returns 201 with customer and account identifiers.")]
+    [Consumes("application/json")]
+    [Produces("application/json")]
+    [ProducesResponseType(typeof(CreateCustomerWithAccountResponse), StatusCodes.Status201Created)]
+    [ProducesErrorResponseType(typeof(ProblemDetails))]
     public async Task<ActionResult<CreateCustomerWithAccountResponse>> Create(
         [FromServices] CreateCustomerWithAccount useCase,
         [FromBody] CreateCustomerWithAccountRequest request,
@@ -24,6 +30,8 @@ public class CustomersController : ControllerBase
     }
 
     [HttpPost("{customerId:guid}/accounts")]
+    [EndpointSummary("Create additional bank account for existing customer")]
+    [EndpointDescription("Creates an additional bank account for an existing customer identified by route parameter customerId.")]
     public async Task<ActionResult<CreateAccountForExistingCustomerResponse>> CreateAccount(
         Guid customerId,
         [FromServices] CreateAccountForExistingCustomer useCase,
@@ -40,6 +48,11 @@ public class CustomersController : ControllerBase
 
     [HttpGet]
     [Authorize(Roles = "CustomerService")]
+    [EndpointSummary("Get paged list of customers")]
+    [EndpointDescription("Returns a paginated list of customers for CustomerService role. Supports page, pageSize and ssn (personal number prefix) filters.")]
+    [Produces("application/json")]
+    [ProducesResponseType(typeof(PagedResult<CustomerListItemDto>), StatusCodes.Status200OK)]
+    [ProducesErrorResponseType(typeof(ProblemDetails))]
     public async Task<ActionResult<PagedResult<CustomerListItemDto>>> GetPage(
         [FromServices] GetCustomersPage useCase,
         [FromServices] IOptions<QueryParamsOptions> options,
@@ -63,6 +76,11 @@ public class CustomersController : ControllerBase
 
     [HttpGet("{id:guid}")]
     [Authorize(Roles = "CustomerService")]
+    [EndpointSummary("Get single customer by id")]
+    [EndpointDescription("Returns detailed information about a single customer, including all bank accounts, for CustomerService role.")]
+    [Produces("application/json")]
+    [ProducesResponseType(typeof(CustomerDetailDto), StatusCodes.Status200OK)]
+    [ProducesErrorResponseType(typeof(ProblemDetails))]
     public async Task<ActionResult<CustomerDetailDto>> GetById(
         Guid id,
         [FromServices] GetCustomerById useCase,
@@ -74,6 +92,11 @@ public class CustomersController : ControllerBase
 
     [HttpPatch]
     [Authorize(Roles = "Customer")]
+    [EndpointSummary("Update current customer's profile")]
+    [EndpointDescription("Allows an authenticated customer to update their name, email and/or personal number based on the authenticated user id.")]
+    [Consumes("application/json")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesErrorResponseType(typeof(ProblemDetails))]
     public async Task<IActionResult> UpdateMe(
         [FromServices] UpdateCustomerDetails useCase,
         [FromBody] UpdateCustomerDetailsBody body,

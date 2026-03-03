@@ -13,8 +13,24 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
 using BankRUs.Api;
 using BankRUs.Api.Auth;
+using Scalar.AspNetCore;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Serilog configuration: log to console and rolling file
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .Enrich.FromLogContext()
+    .WriteTo.Console()
+    .WriteTo.File(
+        path: "Logs/bankrus-.log",
+        rollingInterval: RollingInterval.Day,
+        retainedFileCountLimit: 7,
+        buffered: true)
+    .CreateLogger();
+
+builder.Host.UseSerilog();
 
 // DbContext
 builder.Services.AddDbContext<BankDbContext>(options =>
@@ -47,6 +63,7 @@ builder.Services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<BankDbContex
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+builder.Services.AddEndpointsApiExplorer();
 
 // Query params options (pagination limits etc.)
 builder.Services.Configure<QueryParamsOptions>(builder.Configuration.GetSection("QueryParams"));
@@ -64,6 +81,7 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.MapScalarApiReference();
 }
 
 app.UseExceptionHandler(errorApp =>
@@ -107,6 +125,13 @@ app.UseExceptionHandler(errorApp =>
                 "https://httpstatuses.com/500",
                 ex?.Message ?? "Unexpected server error")
         };
+
+        // Log unhandled exception with status code for diagnostics
+        if (ex is not null)
+        {
+            var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
+            logger.LogError(ex, "Unhandled exception handled by middleware with HTTP status {StatusCode}", status);
+        }
 
         context.Response.StatusCode = status;
         context.Response.ContentType = "application/problem+json";

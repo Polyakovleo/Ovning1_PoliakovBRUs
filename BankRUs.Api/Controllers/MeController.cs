@@ -11,6 +11,10 @@ public class MeController : ControllerBase
 {
     [HttpDelete]
     [Authorize(Roles = "Customer")]
+    [EndpointSummary("Delete current customer account")]
+    [EndpointDescription("Deletes the currently authenticated customer's account (and related bank accounts) based on the authenticated user id.")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesErrorResponseType(typeof(ProblemDetails))]
     public async Task<IActionResult> DeleteMe(
         [FromServices] CloseCustomerAccount useCase,
         CancellationToken ct = default)

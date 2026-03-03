@@ -1,5 +1,6 @@
 using BankRUs.Application.Interfaces;
 using BankRUs.Domain.Entities;
+using Microsoft.Extensions.Logging;
 
 namespace BankRUs.Application.UseCases.Accounts;
 
@@ -20,17 +21,20 @@ public class OpenBankAccount
     private readonly IAccountRepository _accounts;
     private readonly IAccountNumberGenerator _accountNumberGenerator;
     private readonly IUnitOfWork _uow;
+    private readonly ILogger<OpenBankAccount> _logger;
 
     public OpenBankAccount(
         ICustomerRepository customers,
         IAccountRepository accounts,
         IAccountNumberGenerator accountNumberGenerator,
-        IUnitOfWork uow)
+        IUnitOfWork uow,
+        ILogger<OpenBankAccount> logger)
     {
         _customers = customers;
         _accounts = accounts;
         _accountNumberGenerator = accountNumberGenerator;
         _uow = uow;
+        _logger = logger;
     }
 
     public async Task<OpenBankAccountResponse> ExecuteAsync(
@@ -56,6 +60,13 @@ public class OpenBankAccount
         await _accounts.AddAsync(account, ct);
 
         await _uow.SaveChangesAsync(ct);
+
+        _logger.LogInformation(
+            "Opened bank account {AccountId} ({AccountNumber}) for customer {CustomerId} with initial balance {InitialBalance}",
+            account.Id,
+            account.AccountNumber,
+            customer.Id,
+            account.Balance);
 
         return new OpenBankAccountResponse(account.Id, account.AccountNumber, account.Balance);
     }

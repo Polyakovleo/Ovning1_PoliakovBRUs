@@ -1,5 +1,6 @@
 using BankRUs.Application.Common.Exceptions;
 using BankRUs.Application.Interfaces;
+using Microsoft.Extensions.Logging;
 
 namespace BankRUs.Application.UseCases.Customers;
 
@@ -14,11 +15,13 @@ public class UpdateCustomerDetails
 {
     private readonly ICustomerRepository _customers;
     private readonly IUnitOfWork _uow;
+    private readonly ILogger<UpdateCustomerDetails> _logger;
 
-    public UpdateCustomerDetails(ICustomerRepository customers, IUnitOfWork uow)
+    public UpdateCustomerDetails(ICustomerRepository customers, IUnitOfWork uow, ILogger<UpdateCustomerDetails> logger)
     {
         _customers = customers;
         _uow = uow;
+        _logger = logger;
     }
 
     public async Task HandleAsync(UpdateCustomerDetailsCommand command, CancellationToken ct)
@@ -74,6 +77,12 @@ public class UpdateCustomerDetails
         }
 
         await _uow.SaveChangesAsync(ct);
+        _logger.LogInformation(
+            "Updated customer {CustomerId}: NameChanged={NameChanged}, EmailChanged={EmailChanged}, PersonalNumberChanged={PersonalNumberChanged}",
+            customer.Id,
+            name is not null,
+            email is not null,
+            personalNumber is not null);
     }
 }
 

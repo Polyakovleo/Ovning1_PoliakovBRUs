@@ -8,6 +8,12 @@ namespace BankRUs.Api.Controllers;
 public class BankAccountsController : ControllerBase
 {
     [HttpPost]
+    [EndpointSummary("Open bank account for customer")]
+    [EndpointDescription("Opens a new bank account for an existing customer specified by userId, with an optional initial balance.")]
+    [Consumes("application/json")]
+    [Produces("application/json")]
+    [ProducesResponseType(typeof(OpenBankAccountResponse), StatusCodes.Status200OK)]
+    [ProducesErrorResponseType(typeof(ProblemDetails))]
     public async Task<ActionResult<OpenBankAccountResponse>> Open(
         [FromServices] OpenBankAccount useCase,
         [FromBody] OpenBankAccountBody body,

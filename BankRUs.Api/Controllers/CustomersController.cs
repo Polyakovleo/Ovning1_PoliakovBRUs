@@ -44,6 +44,7 @@ public class CustomersController : ControllerBase
         [FromServices] IOptions<QueryParamsOptions> options,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
+        [FromQuery(Name = "ssn")] string? ssn = null,
         CancellationToken ct = default)
     {
         var maxPageSize = options.Value.MaxPageSize;
@@ -53,7 +54,7 @@ public class CustomersController : ControllerBase
         if (pageSize > maxPageSize) pageSize = maxPageSize;
 
         var result = await useCase.ExecuteAsync(
-            new GetCustomersPageQuery(page, pageSize),
+            new GetCustomersPageQuery(page, pageSize, ssn),
             ct);
 
         return Ok(result);

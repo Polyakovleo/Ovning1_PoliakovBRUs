@@ -57,14 +57,23 @@ namespace BankRUs.Infrastructure.Repositories
         public async Task<(IReadOnlyList<Customer> Items, int TotalCount)> GetPageAsync(
             int page,
             int pageSize,
+            string? ssnFilter,
             CancellationToken ct)
         {
             if (page < 1) page = 1;
             if (pageSize < 1) pageSize = 1;
 
-            var totalCount = await _context.Customers.CountAsync(ct);
+            IQueryable<Customer> query = _context.Customers;
 
-            var items = await _context.Customers
+            if (!string.IsNullOrWhiteSpace(ssnFilter))
+            {
+                var normalized = ssnFilter.Trim();
+                query = query.Where(c => c.PersonalNumber.StartsWith(normalized));
+            }
+
+            var totalCount = await query.CountAsync(ct);
+
+            var items = await query
                 .AsNoTracking()
                 .OrderBy(c => c.Name)
                 .Include(c => c.Accounts)

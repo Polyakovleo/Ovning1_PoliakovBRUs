@@ -3,7 +3,7 @@ using BankRUs.Application.Interfaces;
 
 namespace BankRUs.Application.UseCases.Customers;
 
-public record GetCustomersPageQuery(int Page, int PageSize);
+public record GetCustomersPageQuery(int Page, int PageSize, string? Ssn);
 
 public class GetCustomersPage
 {
@@ -20,8 +20,9 @@ public class GetCustomersPage
     {
         var page = query.Page < 1 ? 1 : query.Page;
         var pageSize = query.PageSize < 1 ? 1 : query.PageSize;
+        var ssn = string.IsNullOrWhiteSpace(query.Ssn) ? null : query.Ssn.Trim();
 
-        var (items, totalCount) = await _customers.GetPageAsync(page, pageSize, ct);
+        var (items, totalCount) = await _customers.GetPageAsync(page, pageSize, ssn, ct);
 
         var list = items.Select(c => new CustomerListItemDto(
             c.Id,

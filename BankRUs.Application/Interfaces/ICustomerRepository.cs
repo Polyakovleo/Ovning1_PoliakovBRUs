@@ -21,6 +21,7 @@ namespace BankRUs.Application.Interfaces
             Task<(IReadOnlyList<Customer> Items, int TotalCount)> GetPageAsync(
                 int page,
                 int pageSize,
+                string? ssnFilter,
                 CancellationToken cancellationToken);
 
             //Task SaveChangesAsync(CancellationToken cancellationToken);
